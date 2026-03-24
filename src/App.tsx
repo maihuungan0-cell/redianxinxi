@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { TrendingUp, RefreshCw, ExternalLink, Search, Menu, Bell, User, Sparkles, ArrowRight, Copy, Check, Loader2 } from 'lucide-react';
+import { TrendingUp, RefreshCw, ExternalLink, Search, Menu, Bell, User, Sparkles, ArrowRight, Copy, Check, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface HotItem {
@@ -31,6 +31,7 @@ export default function App() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   
   const resultsRef = useRef<HTMLDivElement>(null);
+  const trendsRef = useRef<HTMLDivElement>(null);
 
   const fetchBoards = async () => {
     setLoading(true);
@@ -90,6 +91,14 @@ export default function App() {
     } finally {
       setIsGeneratingAI(false);
     }
+  };
+
+  const handleReturnToTrends = () => {
+    setAiResult(null);
+    setSearchTerm('');
+    setTimeout(() => {
+      trendsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const copyToClipboard = (text: string, index: number) => {
@@ -163,6 +172,14 @@ export default function App() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAIMining()}
                 />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')}
+                    className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 mr-2 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
                 <button 
                   onClick={handleAIMining}
                   disabled={isGeneratingAI || !searchTerm.trim()}
@@ -216,7 +233,7 @@ export default function App() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => setAiResult(null)}
+                    onClick={handleReturnToTrends}
                     className="text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     清除结果
@@ -274,13 +291,23 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
+                  <button 
+                    onClick={handleReturnToTrends}
+                    className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
+                  >
+                    <ArrowRight className="w-4 h-4 rotate-180" />
+                    <span>返回今日趋势</span>
+                  </button>
+                </div>
               </div>
             </motion.section>
           )}
         </AnimatePresence>
 
         {/* Today's Hot List Section - Renamed to "今日趋势参考" */}
-        <section>
+        <section ref={trendsRef}>
           <div className="flex items-center justify-between mb-12">
             <div>
               <h3 className="text-3xl font-black tracking-tighter text-slate-900">今日趋势参考</h3>
