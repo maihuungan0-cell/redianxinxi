@@ -1,0 +1,5 @@
+{
+  "name": "Real-time Hot Boards",
+  "description": "A real-time trending topics aggregator that scrapes data from TopHub, featuring daily updates and hot lists from various platforms.",
+  "requestFramePermissions": []
+}
