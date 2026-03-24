@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { TrendingUp, RefreshCw, ExternalLink, Search, Menu, Bell, User, Sparkles, ArrowRight, Copy, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI } from "@google/genai";
 
 interface HotItem {
   title: string;
@@ -61,39 +60,24 @@ export default function App() {
     
     setIsGeneratingAI(true);
     setAiResult(null);
+    setError(null);
     
     try {
-      // Use process.env for AI Studio, import.meta.env for Vercel/Vite
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error("Missing API Key. Please set GEMINI_API_KEY in environment variables.");
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const prompt = `你是一个专业的爆款文案专家和SEO专家。
-请针对关键词 "${searchTerm}" 进行深度挖掘。
-要求返回 JSON 格式数据，包含以下字段：
-1. titles: 5个具有爆款潜力的标题（针对小红书、抖音、微博等平台）。
-2. keywords: 5个相关的长尾热词或搜索词。
-3. strategy: 一段简短的爆款运营策略建议（100字以内）。
-
-请直接返回 JSON，不要包含任何 Markdown 代码块标记。`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const response = await fetch('/api/ai-mining', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ searchTerm }),
       });
       
-      const text = response.text;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "AI 挖掘失败，请稍后再试。");
+      }
       
-      if (!text) throw new Error("No response from AI");
-      
-      // Clean up potential markdown code blocks
-      const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
-      setAiResult(parsed);
+      const data = await response.json();
+      setAiResult(data);
       
       // Scroll to results
       setTimeout(() => {
@@ -160,7 +144,7 @@ export default function App() {
             transition={{ duration: 0.6 }}
           >
             <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-[0.2em] mb-6 border border-indigo-100">
-              DeepSeek V3 爆款挖掘机
+              DeepSeek AI 爆款挖掘机
             </span>
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 mb-8 leading-[0.9]">
               热点信息
@@ -228,7 +212,7 @@ export default function App() {
                     </div>
                     <div>
                       <h3 className="text-xl font-black tracking-tight text-slate-900">AI 挖掘结果</h3>
-                      <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">DeepSeek V3 Engine</p>
+                      <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">DeepSeek AI Engine</p>
                     </div>
                   </div>
                   <button 
@@ -407,7 +391,7 @@ export default function App() {
           </div>
           <div className="h-[1px] bg-slate-800 w-full mb-12"></div>
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            <p>© 2026 TrendBurst. Powered by DeepSeek V3 & Gemini.</p>
+            <p>© 2026 TrendBurst. Powered by DeepSeek AI.</p>
             <p>Data aggregated from TopHub & Social Media.</p>
           </div>
         </div>
