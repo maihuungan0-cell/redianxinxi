@@ -63,7 +63,14 @@ export default function App() {
     setAiResult(null);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      // Use process.env for AI Studio, import.meta.env for Vercel/Vite
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error("Missing API Key. Please set GEMINI_API_KEY in environment variables.");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       
       const prompt = `你是一个专业的爆款文案专家和SEO专家。
 请针对关键词 "${searchTerm}" 进行深度挖掘。
@@ -94,7 +101,8 @@ export default function App() {
       }, 100);
     } catch (err) {
       console.error("AI Generation Error:", err);
-      setError("AI 挖掘失败，请检查网络或稍后再试。");
+      const msg = err instanceof Error ? err.message : "AI 挖掘失败，请检查网络或稍后再试。";
+      setError(msg);
     } finally {
       setIsGeneratingAI(false);
     }
